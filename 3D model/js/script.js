@@ -130,7 +130,7 @@ function render() {
 
 }
 
-function saveData(data) // does the same as FileSaver.js
+function saveData(data)
 {
   let a = document.createElement("a");
   document.body.appendChild(a);
