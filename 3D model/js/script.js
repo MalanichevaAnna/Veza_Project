@@ -2,10 +2,8 @@
 import * as THREE from '../node_modules/three/build/three.module.js';
 
 import { OrbitControls } from '../node_modules/three/examples/jsm/controls/OrbitControls.js';
-import { ConvexBufferGeometry } from '../node_modules/three/examples/jsm/geometries/ConvexGeometry.js';
 import { STLExporter } from '../node_modules/three/examples/jsm/exporters/STLExporter.js';
 
-import { STLLoader } from '../node_modules/three/examples/jsm/loaders/STLLoader.js';
 let group, camera, scene, renderer,texture;
 
 init();
