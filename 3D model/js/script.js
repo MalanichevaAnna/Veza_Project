@@ -3,109 +3,110 @@ import * as THREE from '../node_modules/three/build/three.module.js';
 
 import { OrbitControls } from '../node_modules/three/examples/jsm/controls/OrbitControls.js';
 import { ConvexBufferGeometry } from '../node_modules/three/examples/jsm/geometries/ConvexGeometry.js';
-let group, camera, scene, renderer, data;
+import { STLExporter } from '../node_modules/three/examples/jsm/exporters/STLExporter.js';
+
+import { STLLoader } from '../node_modules/three/examples/jsm/loaders/STLLoader.js';
+let group, camera, scene, renderer,texture;
 
 init();
 animate();
 
-function createNew_3DObject(data = null){
+function createNew_3DObject(data){
   group.clear();
-  //const vertices = new THREE.DodecahedronGeometry( 10 ).vertices;
-  let vertices = [];
-  if(data !== null){
-    for(let i = 0; i < data.length; i++){
-      vertices[i] = ( new THREE.Vector3(data[i].x,data[i].y,data[i].z));
-    }
-  }
 
-  const loader = new THREE.TextureLoader();
-  const texture = loader.load( './textures/sprites/disc.png' );
-  const pointsMaterial = new THREE.PointsMaterial( {
+  const pointsMaterial = new THREE.PointsMaterial({
 
     color: 0x0080ff,
     map: texture,
     size: 1,
     alphaTest: 0.5
 
-  } );
+  });
 
-  const pointsGeometry = new THREE.BufferGeometry().setFromPoints( vertices );
-
-  const points = new THREE.Points( pointsGeometry, pointsMaterial );
-  group.add( points );
-
-  // convex hull
-
-  const meshMaterial = new THREE.MeshLambertMaterial( {
+  const meshMaterial = new THREE.MeshLambertMaterial({
     color: 0xffffff,
     opacity: 0.5,
     transparent: true
-  } );
+  });
 
-  const meshGeometry = new ConvexBufferGeometry( vertices );
-  let json = meshGeometry.toJSON();
+  const meshGeometry = new THREE.Geometry();
+  meshGeometry.vertices = data.vertices;
+  meshGeometry.faces = data.faces;
+  meshGeometry.computeFaceNormals();
+  const material = new THREE.MeshPhongMaterial( { color: 0xff5533 } );
+  const mesh = new THREE.Mesh( meshGeometry , meshMaterial );
+  group.add(mesh);
 
-  const mesh1 = new THREE.Mesh( meshGeometry, meshMaterial );
-  mesh1.material.side = THREE.BackSide; // back faces
-  mesh1.renderOrder = 0;
-  group.add( mesh1 );
-
-  const mesh2 = new THREE.Mesh( meshGeometry, meshMaterial.clone() );
-  mesh2.material.side = THREE.FrontSide; // front faces
-  mesh2.renderOrder = 1;
-  group.add( mesh2 );
-
-  window.addEventListener( 'resize', onWindowResize, false );
-  render();
-  saveData(json);
+  let exporter = new STLExporter();
+  return exporter.parse(mesh);
 }
 
 document.getElementById("file").addEventListener("change", function() {
   let fileInput = document.getElementById("file").files[0];
-  let fileRead = new FileReader();
-  fileRead.onload = function(e) {
-    let content = e.target.result;
-    data = JSON.parse(content);
-    console.log(data);
-    createNew_3DObject(data);
-    animate();
+  let reader = new FileReader();
+
+  reader.onload = function () {
+    console.log(reader.result);
+    let geometryData = JSON.parse(reader.result);
+
+    let vertices = geometryData.vertices;
+    let faces = geometryData.faces.map(face => new THREE.Face3(face.a, face.b, face.c));
+
+    let stl = createNew_3DObject({vertices, faces});
+
+    downloadTextFile(stl, "object.stl");
+
+    createNew_3DObject({vertices,data});
   };
-  fileRead.readAsText(fileInput);
+  reader.readAsText(fileInput);
 });
 
 function init() {
   scene = new THREE.Scene();
 
-  renderer = new THREE.WebGLRenderer( { antialias: true } );
-  renderer.setPixelRatio( window.devicePixelRatio );
-  renderer.setSize( window.innerWidth, window.innerHeight );
-  document.body.appendChild( renderer.domElement );
+  renderer = new THREE.WebGLRenderer({
+    antialias: true
+  });
+
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
 
   // camera
 
-  camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 1000 );
-  camera.position.set( 15, 20, 30 );
-  scene.add( camera );
+  camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+  camera.position.set(100, 150, 200);
+  camera.up = new THREE.Vector3( 0, 0, 1 );
+  scene.add(camera);
 
   // controls
-  const controls = new OrbitControls( camera, renderer.domElement );
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+
   // ambient light
 
-  scene.add( new THREE.AmbientLight( 0x222222 ) );
+  scene.add(new THREE.AmbientLight(0x222222));
 
   // point light
 
-  const light = new THREE.PointLight( 0xffffff, 1 );
-  camera.add( light );
+  const light = new THREE.PointLight(0xffffff, 1);
+  camera.add(light);
 
   // helper
 
-  scene.add( new THREE.AxesHelper( 20 ) );
-
-  // textures
+  scene.add(new THREE.AxesHelper(20));
 
   group = new THREE.Group();
-  scene.add( group );
+  scene.add(group);
+
+  let tmp = new THREE.DodecahedronGeometry(10);
+  let vertices = new THREE.DodecahedronGeometry(10).vertices;
+
+  window.addEventListener('resize', onWindowResize, false);
+
+  const loader = new THREE.TextureLoader();
+  texture = loader.load('./textures/sprites/disc.png');
+
 }
 
 function onWindowResize() {
@@ -130,15 +131,10 @@ function render() {
 
 }
 
-function saveData(data)
-{
-  let a = document.createElement("a");
-  document.body.appendChild(a);
-  a.style = "display: none";
-  let fileName = new  Date();
-  let url = window.URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/json'}));
-  a.href = url;
-  a.download = fileName;
+function downloadTextFile(text, name) {
+  const a = document.createElement('a');
+  const type = name.split(".").pop();
+  a.href = URL.createObjectURL( new Blob([text], { type:`text/${type === "txt" ? "plain" : type}` }) );
+  a.download = name;
   a.click();
-  window.URL.revokeObjectURL(url);
 }
