@@ -54,7 +54,6 @@ document.getElementById("file").addEventListener("change", function() {
 
     downloadTextFile(stl, "object.stl");
 
-    createNew_3DObject({vertices,data});
   };
   reader.readAsText(fileInput);
 });
