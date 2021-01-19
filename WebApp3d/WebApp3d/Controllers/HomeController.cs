@@ -29,13 +29,12 @@ namespace WebApp3d.Controllers
 
         public IActionResult ConverFile(IFormFile stl)
         {
+            var date = DateTime.Now.ToString("MM/dd/yyyy_HH/mm/ss");
             var document = new Scene();
             var stream = stl.OpenReadStream();
-            //StreamReader streamReader = new StreamReader(stream);
-            //string text = streamReader.ReadToEnd();
-            document.Open(stream);
-            document.Save("Document.fbx", new FBXSaveOptions(FileFormat.FBX6100ASCII));
-            return null;
+            document.Open(stream, new STLLoadOptions(FileContentType.Binary));
+            document.Save("Object"+ date + ".fbx", new FBXSaveOptions(FileFormat.FBX7400ASCII));
+            return View();
         }
 
         public IActionResult Privacy()

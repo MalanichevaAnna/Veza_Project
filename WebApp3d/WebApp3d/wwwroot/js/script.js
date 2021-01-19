@@ -6,7 +6,7 @@ let group, camera, scene, renderer,texture;
 
 init();
 animate();
-function createNew_3DObject(data, fileInput){
+function createNew_3DObject(data, fileName) {
   group.clear();
 
   const pointsMaterial = new THREE.PointsMaterial({
@@ -34,7 +34,7 @@ function createNew_3DObject(data, fileInput){
 
     let exporter = new STLExporter();
     let formData = new FormData();
-    formData.append("stl", new Blob([exporter.parse(mesh)], { type:'text/stl' }));
+    formData.append("stl", new Blob([exporter.parse(mesh, { binary: true })], { type: 'text/stl' }));
     $.ajax({
         url: "/Home/ConverFile/",
         type: "POST",
@@ -61,8 +61,7 @@ document.getElementById("file").addEventListener("change", function() {
     let geometryData = JSON.parse(reader.result);
 
     let vertices = geometryData.vertices;
-    let faces = geometryData.faces.map(face => new THREE.Face3(face.a, face.b, face.c));
-
+      let faces = geometryData.faces.map(face => new THREE.Face3(face.a, face.b, face.c));
       var stl = createNew_3DObject({ vertices, faces }, fileInput);
 
       //downloadTextFile(stl, "object.stl");

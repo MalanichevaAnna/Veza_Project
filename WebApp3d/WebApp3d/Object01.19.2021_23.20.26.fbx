@@ -12,10 +12,10 @@ FBXHeaderExtension:  {
 		Year: 2021
 		Month: 1
 		Day: 19
-		Hour: 22
-		Minute: 46
-		Second: 46
-		Millisecond: 438
+		Hour: 23
+		Minute: 20
+		Second: 28
+		Millisecond: 578
 	}
 	Creator: "Aspose.3D FBX SDK version 21.1"
 	SceneInfo: "SceneInfo::GlobalInfo", "UserData" {
